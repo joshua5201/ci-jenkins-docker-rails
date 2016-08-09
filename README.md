@@ -25,3 +25,18 @@
     - Labels: docker
     - Add Credentials -> username with password -> jenkins/jenkins
 
+## Create Job
+1. New Item -> Enter name -> Choose freestyle item
+2. Restrict where this project can be run: docker (or whatever labels you set for dockers)
+3. Source Code Management: git -> set repo url -> add credentials (ssh private key with username 'git')
+4. Build Environment: Run the build in a RVM-managed environment -> choose your implementation 
+5. Add build steps: Execute shell 
+``` bash
+gem install bundler
+bundle install
+bundle exec rake db:test:prepare
+bundle exec rake
+```
+
+## Troubleshooting
+1. If any packages are needed to be install, email: joshua841025@gmail.com or fork my Dockerfile on dockerhub.
