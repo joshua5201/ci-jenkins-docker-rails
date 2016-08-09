@@ -25,7 +25,7 @@
     - Labels: docker
     - Add Credentials -> username with password -> jenkins/jenkins
 
-## Create Job
+## Create Build Job
 1. New Item -> Enter name -> Choose freestyle item
 2. Restrict where this project can be run: docker (or whatever labels you set for dockers)
 3. Source Code Management: git -> set repo url -> add credentials (ssh private key with username 'git')
@@ -37,6 +37,17 @@ bundle install
 bundle exec rake db:test:prepare
 bundle exec rake
 ```
+
+## Tips
+1. You can create new job based on old ones.
+2. If you want Jenkins to integrate with GitHub:
+    - Go to [https://github.com/settings/tokens](https://github.com/settings/tokens) to generate your token
+    - Manage Jenkins -> Configure System 
+    - GitHub -> Add GitHub Server
+    - Credentials: Secret Text -> Input your token here
+3. Project configuration tips: 
+    - Build Triggers -> Build when a change is pushed to GitHub
+    - Post-build Actions: Set status for GitHub commit (need to have token set)
 
 ## Troubleshooting
 1. If any packages are needed to be install, email: joshua841025@gmail.com or fork my Dockerfile on dockerhub.
