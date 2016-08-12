@@ -19,6 +19,7 @@
 
 ## Basic Docker Usage
 
+Note:  All commands should run with sudo permission unless you have set the docker group.
 ### Terminologies
 1. Container: VM-like instance running processes.
 2. Image: Disk image for containers. Defined by a Dockerfile. You can get a lot of images from [Docker Hub](https://hub.docker.com/)
@@ -48,10 +49,10 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
 ## Prepare Docker Images
 ### Install RVM in Image
 
-1. Pull image: `sudo docker pull joshua5201/jenkins-slave-rails`
-2. Create volume for RVM: `sudo docker volume create --name rvm`
-3. Create volume for Workspace: `sudo docker volume create --name jenkins_workspace`
-4. Install RVM in docker: `sudo docker run -v rvm:/home/jenkins/.rvm -it joshua5201/jenkins-slave-rails /bin/bash`
+1. Pull image: `docker pull joshua5201/jenkins-slave-rails`
+2. Create volume for RVM: `docker volume create --name rvm`
+3. Create volume for Workspace: `docker volume create --name jenkins_workspace`
+4. Install RVM in docker: `docker run -v rvm:/home/jenkins/.rvm -it joshua5201/jenkins-slave-rails /bin/bash`
 5. Inside docker: 
     - `su -l jenkins`
     - `curl -sSL https://get.rvm.io | bash -s stable`
