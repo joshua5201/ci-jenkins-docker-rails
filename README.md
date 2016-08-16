@@ -66,17 +66,21 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
 2. Manage jenkins -> Manage plugins -> Available -> install docker rvm
 3. Manage jenkins -> Configure system -> Add a new cloud (choose docker) ref: [https://wiki.jenkins-ci.org/display/JENKINS/Docker+Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Docker+Plugin)
     - set name, docker url (usually `unix:///var/run/docker.sock`)
+<br><img src="Screenshots/cloud-config.png"><br>
     - Add docker template
     - Docker image: joshua5201/jenkins-slave-rails
     - Container settings -> Volumes: rvm:/home/jenkins/.rvm jenkins\_workspace:/home/jenkins/workspace
     - Remote Filing System Root: /home/jenkins
     - Labels: docker
     - Add Credentials -> username with password -> jenkins/jenkins
+<br><img src="Screenshots/docker-config-1.png"><img src="Screenshots/docker-config-2.png"><br>
+<br><img src="Screenshots/jenkins-credentials.png"><br>
 4. When adding other images like jenkins-slave-rails-pg, just change the Docker image and Labels above.
 
 ## Create Build Job
 1. New Item -> Enter name -> Choose freestyle item
 2. General -> Advanced -> Custom Workspace:  jenkins\_workspace:/home/jenkins/workspace
+<br><img src="Screenshots/custom-workspace.png"><br>
 2. Restrict where this project can be run: docker (or whatever labels you set for your docker image)
 3. Source Code Management: git -> set repo url -> add credentials (ssh private key with username 'git')
 4. Build Environment: Run the build in a RVM-managed environment -> choose your implementation (e.g. `2.3.0`)
@@ -89,8 +93,27 @@ bundle exec rspec
 ```
 
 ## Create Deploy Job
+1. To avoid SSH problems, please use the same key for GitHub repo deploy key and the key for SSH login to staging / production server.
+2. Follow the same steps as build job.
+3. At Build Environment -> Use secret text(s) or file(s) -> Varialble: DEPLOY\_KEY -> Upload a secret file (id\_rsa PRIVATE key)
+<br><img src="Screenshots/deploy-key.png"><img src="Screenshots/add-key-file.png"><br>
+4. Use the following shell script template:
 
-## Manage Credentials
+``` bash
+# Prepare bundler
+gem install bundler
+bundle install
+
+# Setting up ssh-agent for capistrano
+eval `ssh-agent`
+ssh-add $DEPLOY_KEY
+
+# Deploy scripts here
+bundle exec cap staging deploy
+
+# Kill ssh-agent
+kill $SSH_AGENT_PID
+```
 
 ## Tips
 1. You can create new job based on old ones.
