@@ -78,14 +78,18 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
 2. General -> Advanced -> Custom Workspace:  jenkins\_workspace:/home/jenkins/workspace
 2. Restrict where this project can be run: docker (or whatever labels you set for dockers)
 3. Source Code Management: git -> set repo url -> add credentials (ssh private key with username 'git')
-4. Build Environment: Run the build in a RVM-managed environment -> choose your implementation 
+4. Build Environment: Run the build in a RVM-managed environment -> choose your implementation (e.g. `2.3.0`)
 5. Add build steps: Execute shell 
 ``` bash
 gem install bundler
 bundle install
 bundle exec rake db:test:prepare
-bundle exec rake
+bundle exec rspec
 ```
+
+## Create Deploy Job
+
+## Manage Credentials
 
 ## Tips
 1. You can create new job based on old ones.
@@ -100,3 +104,4 @@ bundle exec rake
 
 ## Troubleshooting
 1. If any packages are needed to be installed, email: joshua841025@gmail.com or fork my Dockerfile.
+2. If it occurs an error like `ActiveRecord::StatementInvalid: PG::InvalidParameterValue: ERROR:  new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)`, add `template: template0` to the test section of your `database.yml`.
