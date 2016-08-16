@@ -57,6 +57,10 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
     - `su -l jenkins`
     - `curl -sSL https://get.rvm.io | bash -s stable`
 
+### Available Images
+1. `joshua5201/jenkins-slave-rails`: basic runtime 
+2. `joshua5201/jenkins-slave-rails-pg`: with postgresql installed. postgres user: jenkins, no password.
+
 ## Jenkins Configuration
 1. Follow the default steps and create first administrator user
 2. Manage jenkins -> Manage plugins -> Available -> install docker rvm
@@ -95,4 +99,4 @@ bundle exec rake
     - Post-build Actions: Set status for GitHub commit (need to have token set)
 
 ## Troubleshooting
-1. If any packages are needed to be install, email: joshua841025@gmail.com or fork my Dockerfile on dockerhub.
+1. If any packages are needed to be installed, email: joshua841025@gmail.com or fork my Dockerfile.
