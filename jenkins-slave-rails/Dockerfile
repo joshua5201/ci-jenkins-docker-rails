@@ -4,7 +4,7 @@ MAINTAINER Tsung-en Hsiao <joshua841025@gmail.com>
 RUN locale-gen en_US.UTF-8
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends curl git openssh-server openjdk-8-jre-headless sudo nodejs gnupg libyaml-dev imagemagick build-essential zlib1g-dev libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev libffi-dev
+    apt-get install -y --no-install-recommends curl git openssh-server openjdk-8-jre-headless sudo nodejs gnupg libyaml-dev imagemagick build-essential zlib1g-dev libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev libffi-dev libgmp-dev
 
 ENV LANG en_US.UTF-8 
 ENV LANGUAGE en_US:en 

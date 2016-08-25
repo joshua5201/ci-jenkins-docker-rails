@@ -1,0 +1,202 @@
+<h1>CI Installation</h1>
+
+<h2>Requirements</h2>
+
+<ol>
+<li>Docker</li>
+<li>Jenkins</li>
+</ol>
+
+<h2>Install Docker</h2>
+
+<h3>Linux</h3>
+
+<ol>
+<li>See <a href="https://docs.docker.com/engine/installation/linux/">Install Docker Engine on Linux</a>.</li>
+<li>if you want to use docker without <code>sudo</code>:
+
+<ul>
+<li>Remember to add yourself to the <code>docker</code> group. <code>sudo groupadd docker &amp;&amp; sudo gpasswd -a $USER docker</code></li>
+<li>Restart the daemon:
+
+<ul>
+<li>In Ubuntu: <code>sudo service docker restart</code></li>
+<li>Other distributions: <code>sudo systemctl restart docker</code></li>
+</ul></li>
+</ul></li>
+</ol>
+
+<h3>Mac OS X</h3>
+
+<ol>
+<li>See <a href="https://docs.docker.com/docker-for-mac/">Getting Started with Docker for Mac</a>.</li>
+</ol>
+
+<h2>Basic Docker Usage</h2>
+
+<p>Note:  All commands should run with sudo permission unless you have set the docker group.</p>
+
+<h3>Terminologies</h3>
+
+<ol>
+<li>Container: VM-like instance running processes.</li>
+<li>Image: Disk image for containers. Defined by a Dockerfile. You can get a lot of images from <a href="https://hub.docker.com/">Docker Hub</a></li>
+<li>Volume: A host directory that can be mount into container directory.</li>
+</ol>
+
+<h3>Container Management</h3>
+
+<ol>
+<li>Show current running containers: <code>docker ps</code></li>
+<li>Show all containers: <code>docker ps -a</code>. This includes exited dockers.</li>
+<li>Show available docker images: <code>docker images</code></li>
+<li>Show all volumes: <code>docker volume ls</code></li>
+<li>To delete a container / image / volume:
+
+<ul>
+<li>Use 1. to 4. to get ID / NAME (something like <code>9e24d7d5a3be</code> or <code>jenkins_workspace</code>).</li>
+<li>Container: <code>docker rm [ID]</code></li>
+<li>Image: <code>docker rmi [ID]</code></li>
+<li>Volume: <code>docker volume rm [NAME]</code></li>
+</ul></li>
+<li>Tip: to remove all unused containers: <code>docker ps -a | awk &#39;{print $1}&#39; | xargs docker rm</code></li>
+</ol>
+
+<h3>Running a Container</h3>
+
+<p><code>bash
+$ docker run [Options] [Docker Image] [Command]
+$ docker run -v [host path / volumne name]:[container path]  -it --rm [docker image] [command] 
+$ # Example:
+$ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/workspace -it --rm joshua5201/jenkins-slave-rails /bin/bash
+</code></p>
+
+<h2>Prepare Docker Images</h2>
+
+<h3>Install RVM in Image</h3>
+
+<ol>
+<li>Pull image: <code>docker pull joshua5201/jenkins-slave-rails</code></li>
+<li>Create volume for RVM: <code>docker volume create --name rvm</code></li>
+<li>Create volume for Workspace: <code>docker volume create --name jenkins_workspace</code></li>
+<li>Install RVM in docker: <code>docker run -v rvm:/home/jenkins/.rvm -it joshua5201/jenkins-slave-rails /bin/bash</code></li>
+<li>Inside docker: 
+
+<ul>
+<li><code>su -l jenkins</code></li>
+<li><code>curl -sSL https://get.rvm.io | bash -s stable</code></li>
+</ul></li>
+</ol>
+
+<h3>Available Images</h3>
+
+<ol>
+<li><code>joshua5201/jenkins-slave-rails</code>: basic runtime </li>
+<li><code>joshua5201/jenkins-slave-rails-pg</code>: with postgresql installed. postgres user: jenkins, no password.</li>
+</ol>
+
+<h2>Jenkins Configuration</h2>
+
+<ol>
+<li>Follow the default steps and create first administrator user</li>
+<li>Manage jenkins -&gt; Manage plugins -&gt; Available -&gt; install docker rvm</li>
+<li>Manage jenkins -&gt; Configure system -&gt; Add a new cloud (choose docker) ref: <a href="https://wiki.jenkins-ci.org/display/JENKINS/Docker+Plugin">https://wiki.jenkins-ci.org/display/JENKINS/Docker+Plugin</a>
+
+<ul>
+<li>set name, docker url (usually <code>unix:///var/run/docker.sock</code>)
+<br><img src="Screenshots/cloud-config.png"><br></li>
+<li>Add docker template</li>
+<li>Docker image: joshua5201/jenkins-slave-rails</li>
+<li>Container settings -&gt; Volumes: rvm:/home/jenkins/.rvm jenkins_workspace:/home/jenkins/workspace</li>
+<li>Remote Filing System Root: /home/jenkins</li>
+<li>Labels: docker</li>
+<li>Add Credentials -&gt; username with password -&gt; jenkins/jenkins
+<br><img src="Screenshots/docker-config-1.png"><img src="Screenshots/docker-config-2.png"><br>
+<br><img src="Screenshots/jenkins-credentials.png"><br></li>
+</ul></li>
+<li>When adding other images like jenkins-slave-rails-pg, just change the Docker image and Labels above.</li>
+</ol>
+
+<h2>Create Build Job</h2>
+
+<ol>
+<li>New Item -&gt; Enter name -&gt; Choose freestyle item</li>
+<li>General -&gt; Advanced -&gt; Custom Workspace:  jenkins_workspace:/home/jenkins/workspace
+<br><img src="Screenshots/custom-workspace.png"><br></li>
+<li>Restrict where this project can be run: docker (or whatever labels you set for your docker image)</li>
+<li>Source Code Management: git -&gt; set repo url -&gt; add credentials (ssh private key with username &#39;git&#39;)</li>
+<li>Build Environment: Run the build in a RVM-managed environment -&gt; choose your implementation (e.g. <code>2.3.0</code>)</li>
+<li>Add build steps: Execute shell 
+<code>bash
+gem install bundler
+bundle install
+bundle exec rake db:test:prepare
+bundle exec rspec
+</code></li>
+</ol>
+
+<h2>Create Deploy Job</h2>
+
+<ol>
+<li>To avoid SSH problems, please use the same key for GitHub repo deploy key and the key for SSH login to staging / production server.</li>
+<li>Follow the same steps as build job.</li>
+<li>At Build Environment -&gt; Use secret text(s) or file(s) -&gt; Varialble: DEPLOY_KEY -&gt; Upload a secret file (id_rsa PRIVATE key)
+<br><img src="Screenshots/deploy-key.png"><img src="Screenshots/add-key-file.png"><br></li>
+<li>Use the following shell script template:</li>
+</ol>
+
+<p>``` bash</p>
+
+<h1>Prepare bundler</h1>
+
+<p>gem install bundler
+bundle install</p>
+
+<h1>Setting up ssh-agent for capistrano</h1>
+
+<p>eval <code>ssh-agent</code>
+ssh-add $DEPLOY_KEY</p>
+
+<h1>Deploy scripts here</h1>
+
+<p>bundle exec cap staging deploy</p>
+
+<h1>Kill ssh-agent</h1>
+
+<p>kill $SSH<em>AGENT</em>PID
+```</p>
+
+<h2>Manage Credentials</h2>
+
+<h2>Tips</h2>
+
+<ol>
+<li>You can create new job based on old ones.</li>
+<li>If you want Jenkins to integrate with GitHub:
+
+<ul>
+<li>Go to <a href="https://github.com/settings/tokens">https://github.com/settings/tokens</a> to generate your token</li>
+<li>Manage Jenkins -&gt; Configure System </li>
+<li>GitHub -&gt; Add GitHub Server</li>
+<li>Credentials: Secret Text -&gt; Input your token here</li>
+</ul></li>
+<li>Project configuration tips: 
+
+<ul>
+<li>Build Triggers -&gt; Build when a change is pushed to GitHub</li>
+<li>Post-build Actions: Set status for GitHub commit (need to have token set)</li>
+</ul></li>
+</ol>
+
+<h2>Troubleshooting</h2>
+
+<ol>
+<li>If any packages are needed to be installed, email: joshua841025@gmail.com or fork my Dockerfile.</li>
+<li>If it occurs an error like <code>ActiveRecord::StatementInvalid: PG::InvalidParameterValue: ERROR:  new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)</code>, add <code>template: template0</code> to the test section of your <code>database.yml</code>.</li>
+</ol>
+
+<style>
+img {
+  width: 400px;
+}
+</style>
