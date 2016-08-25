@@ -129,6 +129,7 @@ kill $SSH_AGENT_PID
     - Build Triggers -> Build when a change is pushed to GitHub
     - Post-build Actions: Set status for GitHub commit (need to have token set) -> Status Result: One of default.
 <br><img src="Screenshots/github-commit-status.png"><br>
+4. If you want to bypass CI in commit message like [ci skip], install this plugin [ci-skip](https://wiki.jenkins-ci.org/display/JENKINS/Ci+Skip+Plugin)
 
 ## Troubleshooting
 1. If any packages are needed to be installed, email: joshua841025@gmail.com or fork my Dockerfile.
