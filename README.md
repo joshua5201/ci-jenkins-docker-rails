@@ -47,7 +47,7 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
 ```
 
 ## Prepare Docker Images
-### Install RVM in Image
+### Install RVM in Image (First run only)
 
 1. Pull image: `docker pull joshua5201/jenkins-slave-rails`
 2. Create volume for RVM: `docker volume create --name rvm`
@@ -56,6 +56,7 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
 5. Inside docker: 
     - `su -l jenkins`
     - `curl -sSL https://get.rvm.io | bash -s stable`
+6. You can just mount rvm volume whenever you add a docker image (~/.rvm must exists). 
 
 ### Available Images
 1. `joshua5201/jenkins-slave-rails`: basic runtime 
@@ -70,12 +71,12 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
     - Add docker template
     - Docker image: joshua5201/jenkins-slave-rails
     - Container settings -> Volumes: rvm:/home/jenkins/.rvm jenkins\_workspace:/home/jenkins/workspace
-    - Remote Filing System Root: /home/jenkins
+    - Remote File System Root: /home/jenkins
     - Labels: docker
     - Add Credentials -> username with password -> jenkins/jenkins
 <br><img src="Screenshots/docker-config-1.png"><img src="Screenshots/docker-config-2.png"><br>
 <br><img src="Screenshots/jenkins-credentials.png"><br>
-4. When adding other images like jenkins-slave-rails-pg, just change the Docker image and Labels above.
+4. When adding other images like jenkins-slave-rails-pg, just change the Docker image and Labels above. (e.g. docker-pg)
 
 ## Create Build Job
 1. New Item -> Enter name -> Choose freestyle item
@@ -86,10 +87,11 @@ $ docker run -v rvm:/home/jenkins/.rvm -v jenkins_workspace:/home/jenkins/worksp
 4. Build Environment: Run the build in a RVM-managed environment -> choose your implementation (e.g. `2.3.0`)
 5. Add build steps: Execute shell 
 ``` bash
-gem install bundler
+gem install rubygems-bundler
+sudo /etc/init.d/redis-server start # if you need Redis
 bundle install
 bundle exec rake db:test:prepare
-bundle exec rspec
+bundle exec rspec 
 ```
 
 ## Create Deploy Job
@@ -101,7 +103,7 @@ bundle exec rspec
 
 ``` bash
 # Prepare bundler
-gem install bundler
+gem install rubygems-bundler
 bundle install
 
 # Setting up ssh-agent for capistrano
@@ -122,10 +124,11 @@ kill $SSH_AGENT_PID
     - Manage Jenkins -> Configure System 
     - GitHub -> Add GitHub Server
     - Credentials: Secret Text -> Input your token here
+<br><img src="Screenshots/github-hook.png"><br>
 3. Project configuration tips: 
     - Build Triggers -> Build when a change is pushed to GitHub
-    - Post-build Actions: Set status for GitHub commit (need to have token set)
+    - Post-build Actions: Set status for GitHub commit (need to have token set) -> Status Result: One of default.
+<br><img src="Screenshots/github-commit-status.png"><br>
 
 ## Troubleshooting
 1. If any packages are needed to be installed, email: joshua841025@gmail.com or fork my Dockerfile.
-2. If it occurs an error like `ActiveRecord::StatementInvalid: PG::InvalidParameterValue: ERROR:  new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)`, add `template: template0` to the test section of your `database.yml`.
